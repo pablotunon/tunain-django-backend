@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'tunain'
 ]
 
 MIDDLEWARE = [
@@ -123,6 +124,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_URL = 'static/'
 
+AUTH_USER_MODEL = "tunain.AppUser"
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
