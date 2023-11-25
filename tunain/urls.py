@@ -17,9 +17,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from . import views
+from . import core_views
 
 urlpatterns = [
+    # Django admin
     path('admin/', admin.site.urls),
-    path('hello', views.hello, name='index'),
+
+    # Core views
+    path('login/cookie', core_views.login_set_cookie, name='login_cookie'),
+    path('login', core_views.login_credentials, name='login'),
+    path('logout', core_views.logout_view, name='logout'),
+    path('permissions', core_views.permissions_view, name='permissions'),
+
+    # Other views
     path('next-page', views.next_page, name='next-page'),
+    path('create-page', views.create_page, name='create-page'),
+
 ]
