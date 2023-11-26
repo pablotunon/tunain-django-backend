@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from .models import Book, Page
+from django.views.decorators.csrf import ensure_csrf_cookie
 
-
+# TODO: remove from here, leave in login flow
+@ensure_csrf_cookie
 def next_page(request):
     print(request.GET)
     book_id = request.GET.get('book_id', 1)
