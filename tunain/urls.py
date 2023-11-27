@@ -30,7 +30,7 @@ urlpatterns = [
     path('permissions', core_views.permissions_view, name='permissions'),
 
     # Other views
-    path('next-page', views.next_page, name='next-page'),
+    path('page', views.next_page, name='page'),
     path('create-page', views.create_page, name='create-page'),
 
 ]

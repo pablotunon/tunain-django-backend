@@ -11,11 +11,13 @@ admin.site.register(AppUser)
 
 class Book(models.Model):
     system_prompt = models.CharField(max_length=1024)
+    title = models.CharField(max_length=128)
     initial_input = models.CharField(max_length=256)
     genre = models.CharField(blank=True, null=True, max_length=256)
     art_extra_prompt = models.CharField(blank=True, null=True, max_length=512)
+    finished = models.BooleanField(default=False)
     owner = models.ForeignKey(AppUser, null=True, blank=True, on_delete=models.DO_NOTHING)
-    views = models.IntegerField()
+    views = models.IntegerField(default=0)
 
 admin.site.register(Book)
 
@@ -28,6 +30,6 @@ class Page(models.Model):
     next_page = models.ForeignKey('Page', null=True, blank=True, on_delete=models.DO_NOTHING, related_name='previous_page')
     alternative_to = models.ForeignKey('Page', null=True, blank=True, on_delete=models.DO_NOTHING, related_name='original')
     owner = models.ForeignKey(AppUser, null=True, blank=True, on_delete=models.DO_NOTHING)
-    views = models.IntegerField()
+    views = models.IntegerField(default=0)
 
 admin.site.register(Page)
