@@ -1,4 +1,5 @@
 import logging
+import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_POST
@@ -58,7 +59,8 @@ def create_page(request):
     new_page = Page(
         book_id=book.id,
         number=last_page.number + 1,
-        content={}
+        content={},
+        owner=book.owner
     )
     new_page.save()
 
@@ -83,7 +85,7 @@ def write_page(request):
     logger.info(f"content: {content}")
 
     page = Page.objects.get(id=page_id)
-    page.content = content
+    page.content = json.loads(content)
     page.save()
 
     return JsonResponse({'message': 'success'})
