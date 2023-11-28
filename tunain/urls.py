@@ -32,5 +32,5 @@ urlpatterns = [
     # Other views
     path('page', views.next_page, name='page'),
     path('create-page', views.create_page, name='create-page'),
-
+    path('write-page', views.write_page, name='write-page'),
 ]
