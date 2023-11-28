@@ -1,11 +1,14 @@
 
 import boto3
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create SQS client
-sqs = boto3.client('sqs')
-
+sqs = boto3.client('sqs', endpoint_url='http://sqs.eu-west-1.localhost.localstack.cloud:4566')
 queue_url = 'http://sqs.eu-west-1.localhost.localstack.cloud:4566/000000000000/page_tasks'
+
 
 def build_prompt(book, pages):
     prompt = [
@@ -19,11 +22,11 @@ def build_prompt(book, pages):
             prompt.append({"role": "user", "content": p.user_input})
 
     prompt_str = json.dumps(prompt)
-    print(prompt_str)
+    logger.info(f"prompt_str {prompt_str}")
     return prompt_str
 
 def create_page_task(book, pages):
-    print('create_page_task called')
+    logger.info('create_page_task called')
     # Send message to SQS queue
     response = sqs.send_message(
         QueueUrl=queue_url,
@@ -43,4 +46,9 @@ def create_page_task(book, pages):
         },
         MessageBody=build_prompt(book, pages)
     )
-    print(response['MessageId'])
+
+    logger.info(f"sqs send_message response: {response}")
+    try:
+        return response['MessageId']
+    except:
+        return 'error'

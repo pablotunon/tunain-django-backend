@@ -1,9 +1,13 @@
+import logging
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .models import Book, Page
 from .queue_helper import create_page_task
+
+logger = logging.getLogger(__name__)
+
 
 # TODO: remove from here, leave in login flow
 @ensure_csrf_cookie
@@ -18,8 +22,6 @@ def next_page(request):
 
     page = Page.objects.get(book=book, number=page_number)
 
-    print(page.content)
-
     return JsonResponse({
         'id': page.id,
         'number': page.number,
@@ -31,7 +33,6 @@ def next_page(request):
 
 @require_POST
 def create_page(request):
-    print(request.POST)
     book_id = request.POST.get('book_id')
     input_str = request.POST.get('input')
 
@@ -48,13 +49,10 @@ def create_page(request):
         return JsonResponse({'error': 'Book already finished'}, status=400)
 
     pages = list(Page.objects.filter(book=book).order_by('number'))
-    print('print page numbers')
-    for p in pages:
-        print(p.number)
-
     last_page = pages[-1]
 
     if not last_page.content:
+        create_page_task(book, pages)
         return JsonResponse({'error': 'Last page still under generation'}, status=400)
 
     # All check passed, create a new page
