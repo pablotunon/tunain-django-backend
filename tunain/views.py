@@ -15,13 +15,15 @@ def list_books(request):
     offset = request.GET.get('offset', 0)
 
     books = Book.objects.all()
-    return [{
-        "id": b.id,
-        "title": b.title,
-    } for b in books[offset:(limit+offset)]]
+    return JsonResponse({
+        "books": [{
+            "id": b.id,
+            "title": b.title,
+        } for b in books[offset:(limit+offset)]]
+    })
 
 def get_book(request):
-    book_id = request.GET.get('id', 1)
+    book_id = request.GET.get('book_id')
 
     if not book_id:
         return JsonResponse({'error': 'Wrong request'}, status=400)
@@ -81,20 +83,30 @@ def create_book(request):
 
     create_page_task(book, [first_page])
 
-    return JsonResponse({'book_id': book.id, 'page_id': first_page.id}, status=201)
+    return JsonResponse({
+        'book_id': book.id,
+        'page_id': first_page.id
+    }, status=201)
 
 
 # TODO: remove from here, leave in login flow
 @ensure_csrf_cookie
 def get_page(request):
-    book_id = request.GET.get('book_id', 1)
-    page_number = request.GET.get('page_number', 1)
+    book_id = request.GET.get('book_id')
+    page_number = request.GET.get('page_number')
+    page_id = request.GET.get('page_id')
+    page = None
 
-    book = Book.objects.get(id=book_id)
-    if not book:
-        return JsonResponse({'error': 'Book not found'}, status=404)
+    if page_id:
+        page = Page.objects.get(id=page_id)
+    else:
+        book = Book.objects.get(id=book_id)
+        if not book:
+            return JsonResponse({'error': 'Book not found'}, status=404)
+        page = Page.objects.get(book=book, number=page_number)
 
-    page = Page.objects.get(book=book, number=page_number)
+    if not page:
+        return JsonResponse({'error': 'Page not found'}, status=404)
 
     return JsonResponse({
         'id': page.id,
@@ -158,7 +170,10 @@ def write_page(request):
     logger.info(f"content: {content}")
 
     page = Page.objects.get(id=page_id)
-    page.content = json.loads(content)
+    try:
+        page.content = json.loads(content)
+    except json.decoder.JSONDecodeError:
+        page.content = json.loads(content + '}')
     page.save()
 
     return JsonResponse({'message': 'success'})
