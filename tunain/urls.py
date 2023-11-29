@@ -30,7 +30,10 @@ urlpatterns = [
     path('permissions', core_views.permissions_view, name='permissions'),
 
     # Other views
-    path('page', views.next_page, name='page'),
+    path('books/list', views.list_books, name='list-books'),
+    path('book', views.get_book, name='book'),
+    path('create-book', views.create_book, name='create-book'),
+    path('page', views.get_page, name='page'),
     path('create-page', views.create_page, name='create-page'),
     path('write-page', views.write_page, name='write-page'),
 ]

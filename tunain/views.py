@@ -10,10 +10,83 @@ from .queue_helper import create_page_task
 logger = logging.getLogger(__name__)
 
 
+def list_books(request):
+    limit = request.GET.get('limit', 10)
+    offset = request.GET.get('offset', 0)
+
+    books = Book.objects.all()
+    return [{
+        "id": b.id,
+        "title": b.title,
+    } for b in books[offset:(limit+offset)]]
+
+def get_book(request):
+    book_id = request.GET.get('id', 1)
+
+    if not book_id:
+        return JsonResponse({'error': 'Wrong request'}, status=400)
+    book = None
+    try:
+        book = Book.objects.get(id=book_id)
+    except:
+        return JsonResponse({'error': 'Book not found'}, status=404)
+
+    return JsonResponse({
+        "title": book.title,
+        "initial_input": book.initial_input,
+        "genre": book.genre,
+        "art_extra_prompt": book.art_extra_prompt,
+        "finished": book.finished,
+        "owner": book.owner,
+        "views": book.views,
+    })
+
+@require_POST
+def create_book(request):
+    title = request.POST.get('title')
+    initial_input = request.POST.get('initial_input')
+
+    if not title or not initial_input:
+        return JsonResponse({'error': 'Wrong request'}, status=400)
+
+    # All check passed, create a new book
+    # TODO: escape title
+    system_prompt = (
+        "The response will be a paragraph of a short novel that continues the user input. "
+        f"The novel is titled '{title}'. "
+        "Response must be given in json format, with the following structure:"
+"""
+{
+    "illustration": the footer text of an illustration sitting next to the paragraph that will be generated.
+    "ended": a boolean representing whether the narrative reached the end or not.
+    "text": the actual paragraph, novel style continuation of user input.
+}
+""")
+
+    book = Book(
+        system_prompt=system_prompt,
+        title=title,
+        initial_input=initial_input
+        # TODO: owner
+    )
+    book.save()
+
+    first_page = Page(
+        book_id=book.id,
+        number=1,
+        content={},
+        owner=book.owner
+    )
+    first_page.save()
+
+    create_page_task(book, [first_page])
+
+    return JsonResponse({'book_id': book.id, 'page_id': first_page.id}, status=201)
+
+
 # TODO: remove from here, leave in login flow
 @ensure_csrf_cookie
-def next_page(request):
-    print(request.GET)
+def get_page(request):
     book_id = request.GET.get('book_id', 1)
     page_number = request.GET.get('page_number', 1)
 
@@ -38,7 +111,7 @@ def create_page(request):
     input_str = request.POST.get('input')
 
     if not book_id or not input_str:
-        return JsonResponse({'error': 'Wrong parameters'}, status=400)
+        return JsonResponse({'error': 'Wrong request'}, status=400)
 
     book = None
     try:
