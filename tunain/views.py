@@ -5,7 +5,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import Book, Page
-from .queue_helper import create_page_task
+from .queue_helper import create_page_task, create_image_task
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def get_book(request):
         "genre": book.genre,
         "art_extra_prompt": book.art_extra_prompt,
         "finished": book.finished,
-        "owner": book.owner,
+        "owner": book.owner.username if book.owner else None,
         "views": book.views,
     })
 
@@ -64,6 +64,17 @@ def create_book(request):
     "text": the actual paragraph, novel style continuation of user input.
 }
 """)
+    # system_prompt = json.dumps({
+    #     'text': (
+    #         "The response will be a paragraph of a short novel that continues the user input. "
+    #         f"The novel is titled '{title}'. "
+    #         "The paragraph itself must be the only content of the response, no introduction or greetings are allowed in the response, just the paragraph itself."
+    #     ),
+    #     'illustration': (
+    #         "The footer text of an illustration sitting next to the paragraph given by the user. "
+    #         "The footer text itself must be the only content of the response, no introduction or greetings are allowed in the response, just the footer text itself."
+    #     )
+    # })
 
     book = Book(
         system_prompt=system_prompt,
@@ -157,6 +168,29 @@ def create_page(request):
 
     return JsonResponse({'page_id': new_page.id}, status=201)
 
+@require_POST
+def resend_task(request):
+    # TODO: check better when this endpoint can be called
+    book_id = request.POST.get('book_id')
+    page_id = request.POST.get('page_id')
+    task_type = request.POST.get('task_type', 'page')
+
+    print(book_id)
+    print(page_id)
+    print(task_type)
+
+    if not book_id and not page_id:
+        return JsonResponse({'error': 'Wrong request'}, status=400)
+
+    if task_type == 'page':
+        book = Book.objects.get(id=book_id)
+        pages = list(Page.objects.filter(book=book).order_by('number'))
+        create_page_task(book, pages)
+        return JsonResponse({'page_id': pages[-1].id}, status=201)
+    elif task_type == 'image':
+        page = Page.objects.get(id=page_id)
+        create_image_task(page)
+        return JsonResponse({'page_id': page.id}, status=201)
 
 @require_POST
 @csrf_exempt
@@ -164,16 +198,24 @@ def write_page(request):
     # TODO: sign request and check signature, since it's an internal call
     logger.info("write_page called")
     page_id = request.POST['page_id']
-    content = request.POST['content']
+    content = request.POST.get('content')
+    image_url = request.POST.get('image_url')
 
     logger.info(f"page_id: {page_id}")
     logger.info(f"content: {content}")
+    logger.info(f"image_url: {image_url}")
 
     page = Page.objects.get(id=page_id)
-    try:
-        page.content = json.loads(content)
-    except json.decoder.JSONDecodeError:
-        page.content = json.loads(content + '}')
-    page.save()
+
+    if content:
+        try:
+            page.content = json.loads(content)
+        except json.decoder.JSONDecodeError:
+            page.content = json.loads(content + '}')
+        page.save()
+        create_image_task(page)
+    elif image_url:
+        page.image_url = image_url
+        page.save()
 
     return JsonResponse({'message': 'success'})

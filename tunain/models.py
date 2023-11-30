@@ -22,9 +22,9 @@ class Book(models.Model):
 admin.site.register(Book)
 
 class Page(models.Model):
-    book = models.ForeignKey(Book, null=True, blank=True, on_delete=models.DO_NOTHING)
+    book = models.ForeignKey(Book, null=True, blank=True, on_delete=models.CASCADE)
     number = models.IntegerField()
-    content = models.JSONField()
+    content = models.JSONField(null=True, blank=True)
     image_url = models.CharField(null=True, blank=True, max_length=256)
     user_input = models.CharField(null=True, blank=True, max_length=256)
     next_page = models.ForeignKey('Page', null=True, blank=True, on_delete=models.DO_NOTHING, related_name='previous_page')

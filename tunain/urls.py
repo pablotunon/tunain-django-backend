@@ -36,4 +36,5 @@ urlpatterns = [
     path('page', views.get_page, name='page'),
     path('create-page', views.create_page, name='create-page'),
     path('write-page', views.write_page, name='write-page'),
+    path('resend-task', views.resend_task, name='resend-task'),
 ]
