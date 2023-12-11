@@ -2,13 +2,16 @@
 import boto3
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 # Create SQS client
-sqs = boto3.client('sqs', endpoint_url='http://sqs.eu-west-1.localhost.localstack.cloud:4566')
-page_queue_url = 'http://sqs.eu-west-1.localhost.localstack.cloud:4566/000000000000/page_tasks'
-image_queue_url = 'http://sqs.eu-west-1.localhost.localstack.cloud:4566/000000000000/image_tasks'
+SQS_ENDPOINT = os.getenv('SQS_ENDPOINT', 'http://sqs.eu-west-1.localhost.localstack.cloud:4566')
+PAGE_QUEUE_URL = os.getenv('SQS_PAGE_TASK_QUEUE_URL', 'http://sqs.eu-west-1.localhost.localstack.cloud:4566/000000000000/page-tasks')
+IMAGE_QUEUE_URL = os.getenv('SQS_IMAGE_TASK_QUEUE_URL', 'http://sqs.eu-west-1.localhost.localstack.cloud:4566/000000000000/image-tasks')
+
+sqs = boto3.client('sqs', endpoint_url=SQS_ENDPOINT)
 
 
 def build_single_prompt(book, pages):
@@ -60,7 +63,7 @@ def create_page_task(book, pages):
     logger.info('create_page_task called')
     # Send message to SQS queue
     response = sqs.send_message(
-        QueueUrl=page_queue_url,
+        QueueUrl=PAGE_QUEUE_URL,
         MessageAttributes={
             'BookId': {
                 'DataType': 'Number',
@@ -88,7 +91,7 @@ def create_image_task(page):
     logger.info('create_image_task called')
     # Send message to SQS queue
     response = sqs.send_message(
-        QueueUrl=image_queue_url,
+        QueueUrl=IMAGE_QUEUE_URL,
         MessageAttributes={
             'PageId': {
                 'DataType': 'Number',

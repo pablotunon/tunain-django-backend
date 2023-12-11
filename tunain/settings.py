@@ -27,11 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*x531q%5emenv7#@4_g-4fxi9cy7&#)s6%9gal$rm2#(5u(=c!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", 'False').lower() == 'true'
 
-ALLOWED_HOSTS = [
-  # TODO: fill
-]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", '').split(',')
 
 
 # Application definition
@@ -151,8 +149,5 @@ AUTH_USER_MODEL = "tunain.AppUser"
 CSRF_COOKIE_SECURE = True # this needs to be set for browser to trust, but would only work over HTTPS with cors
 # CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'None'
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8080",
-    "http://localhost:8080",
-]
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", '').split(',')
 # CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
