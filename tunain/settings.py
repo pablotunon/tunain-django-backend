@@ -41,14 +41,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'corsheaders',
+    'corsheaders',
     'tunain'
 ]
 
 MIDDLEWARE = [
-    # 'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'tunain.middleware.HealthCheckMiddleware', # Needs to be placed before common, to bypass host check for healthcheck
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -140,14 +141,12 @@ STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = "tunain.AppUser"
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://127.0.0.1:8080",
-#     "http://localhost:8080",
-# ]
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", '').split(',')
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_COOKIE_SECURE = True # this needs to be set for browser to trust, but would only work over HTTPS with cors
 # CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'None'
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", '').split(',')
 # CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+

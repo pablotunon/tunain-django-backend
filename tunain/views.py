@@ -9,7 +9,8 @@ from .queue_helper import create_page_task, create_image_task
 
 logger = logging.getLogger(__name__)
 
-
+# TODO: remove from here, leave in login flow
+@ensure_csrf_cookie
 def list_books(request):
     limit = request.GET.get('limit', 10)
     offset = request.GET.get('offset', 0)
@@ -43,6 +44,8 @@ def get_book(request):
         "views": book.views,
     })
 
+# TODO: FIX CSRF WHEN HTTPS IS ENABLED
+@csrf_exempt
 @require_POST
 def create_book(request):
     title = request.POST.get('title')
@@ -100,8 +103,6 @@ def create_book(request):
     }, status=201)
 
 
-# TODO: remove from here, leave in login flow
-@ensure_csrf_cookie
 def get_page(request):
     book_id = request.GET.get('book_id')
     page_number = request.GET.get('page_number')
@@ -128,6 +129,8 @@ def get_page(request):
         'input': page.user_input or None
     })
 
+# TODO: FIX CSRF WHEN HTTPS IS ENABLED
+@csrf_exempt
 @require_POST
 def create_page(request):
     book_id = request.POST.get('book_id')
@@ -168,6 +171,8 @@ def create_page(request):
 
     return JsonResponse({'page_id': new_page.id}, status=201)
 
+# TODO: FIX CSRF WHEN HTTPS IS ENABLED
+@csrf_exempt
 @require_POST
 def resend_task(request):
     # TODO: check better when this endpoint can be called
