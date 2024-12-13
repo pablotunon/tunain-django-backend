@@ -23,6 +23,9 @@ The backend repository provides API endpoints and manages business logic for the
 
 `example.env` file contains a set of environment variable values suitable for local configuration
 
+`docker-compose.yml` file can build and launch the server and the dependencies
+
 ```
 cp example.env .env
+docker-compose up
 ```
